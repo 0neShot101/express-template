@@ -1,0 +1,1 @@
+{ "dependencies": { "@3xpo/events": "^1.0.18", "@types/express": "^4.17.21", "cookie-parser": "^1.4.6", "express": "^4.19.2", "pino": "^9.3.2", "pino-pretty": "^11.2.2" } }
