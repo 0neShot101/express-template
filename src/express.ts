@@ -74,19 +74,15 @@ const initializeRoutes = async (): Promise<void> => {
  * @param basePath - The base directory path of all routes.
  * @returns The endpoint string derived from the route path.
  */
-const getEndpoint = (routePath: string, basePath: string): string => {
-  const relativePath = routePath.replace(basePath, '').replace(/\\/g, '/');
-  
-  const isIndexFile = /\/index\.(ts|js)$/.test(relativePath);
+const getEndpoint = (routePath: string, basePath: string): string => 
+  `/${
+    routePath
+      .replace(new RegExp(`^${basePath}|\\\\|^/+`, 'g'), '')
+      .replace(/_/g, '/:')
+      .replace(/\/index\.(ts|js)$/, path.dirname(routePath) === '/' ? '/' : path.dirname(routePath))
+      .replace(/(\.ts|\.js)$/, '')
+  }`.replace(/\/+/g, '/');
 
-  if (isIndexFile === true) {
-    const folderPath = path.dirname(relativePath);
-    
-    return folderPath === '/' ? '/' : folderPath;
-  };
-
-  return relativePath.replace(/(\.ts|\.js)$/g, '');
-};
 
 
 export default initializeRoutes;
