@@ -8,7 +8,7 @@ import express, {
 } from 'express';
 
 import cookieParser from 'cookie-parser';
-import bodyParser from 'body-parser';
+import { json, } from 'body-parser';
 
 import RouteBuilder from './structures/RouteBuilder';
 
@@ -24,7 +24,7 @@ app.set('trust proxy', 'loopback');
 app.set('json spaces', 2);
 
 app.use(cookieParser());
-app.use(bodyParser.json());
+app.use(json());
 
 /**
  * Initializes and sets up routes
@@ -68,12 +68,25 @@ const initializeRoutes = async (): Promise<void> => {
 
 /**
  * Removes the base path and file extension from the route path.
+ * If the file is called 'index.ts' or 'index.js', use the folder name as the endpoint.
  * 
  * @param routePath - The full path of the route file.
  * @param basePath - The base directory path of all routes.
  * @returns The endpoint string derived from the route path.
  */
-const getEndpoint = (routePath: string, basePath: string) => 
-  routePath.replace(basePath, '').replace(/(\.ts|\.js)$/g, '').replace(/\\/g, '/');
+const getEndpoint = (routePath: string, basePath: string): string => {
+  const relativePath = routePath.replace(basePath, '').replace(/\\/g, '/');
+  
+  const isIndexFile = /\/index\.(ts|js)$/.test(relativePath);
+
+  if (isIndexFile === true) {
+    const folderPath = path.dirname(relativePath);
+    
+    return folderPath === '/' ? '/' : folderPath;
+  };
+
+  return relativePath.replace(/(\.ts|\.js)$/g, '');
+};
+
 
 export default initializeRoutes;
