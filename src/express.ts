@@ -1,4 +1,5 @@
 import path from 'path';
+import { readdir } from 'fs/promises';
 
 import express, { 
   Router,
@@ -11,8 +12,6 @@ import cookieParser from 'cookie-parser';
 import { json, } from 'body-parser';
 
 import RouteBuilder from './structures/RouteBuilder';
-
-import getAllFilePaths from './utils/getAllFilePaths';
 import logger from './utils/logger';
 
 const app: Application = express();
@@ -31,7 +30,9 @@ app.use(json());
 **/
 const initializeRoutes = async (): Promise<void> => {
   try {
-    const routes: string[] = await getAllFilePaths(routesFolder);
+    const routes = (await readdir(routesFolder, { 'recursive': true, 'withFileTypes': true }))
+      .filter(file => file.isFile())
+      .map(file => path.join(file.parentPath, file.name))
 
     await Promise.allSettled(
       routes.map(async (routePath: string) => {
@@ -74,15 +75,17 @@ const initializeRoutes = async (): Promise<void> => {
  * @param basePath - The base directory path of all routes.
  * @returns The endpoint string derived from the route path.
  */
-const getEndpoint = (routePath: string, basePath: string): string => 
-  `/${
-    routePath
-      .replace(new RegExp(`^${basePath}|\\\\|^/+`, 'g'), '')
-      .replace(/_/g, '/:')
-      .replace(/\/index\.(ts|js)$/, path.dirname(routePath) === '/' ? '/' : path.dirname(routePath))
-      .replace(/(\.ts|\.js)$/, '')
-  }`.replace(/\/+/g, '/');
-
-
+const getEndpoint = (routePath: string, basePath: string): string => {
+  const normalizedRoutePath = routePath.replace(/\\/g, '/');
+  const normalizedBasePath = basePath.replace(/\\/g, '/');
+  const relativePath = normalizedRoutePath.replace(normalizedBasePath, '');
+  
+  return `/${relativePath
+    .replace(/^\/+/, '') /* Remove leading slashes */
+    .replace(/_/g, '/:') /* Convert _id to /:id */
+    .replace(/\/index\.(ts|js)$/, '') /* Remove /index.ts or /index.js */
+    .replace(/\.(ts|js)$/, '') /* Remove .ts or .js extension */
+  }`.replace(/\/+/g, '/').replace(/\/$/, '') || '/'; /* Clean up multiple slashes and trailing slash */
+};
 
 export default initializeRoutes;
