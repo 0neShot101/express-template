@@ -12,6 +12,8 @@ import cookieParser from 'cookie-parser';
 import { json, } from 'body-parser';
 
 import RouteBuilder from './structures/RouteBuilder';
+
+import getFilePaths from './utils/getFilePaths';
 import logger from './utils/logger';
 
 const app: Application = express();
@@ -30,9 +32,7 @@ app.use(json());
 **/
 const initializeRoutes = async (): Promise<void> => {
   try {
-    const routes = (await readdir(routesFolder, { 'recursive': true, 'withFileTypes': true }))
-      .filter(file => file.isFile())
-      .map(file => path.join(file.parentPath, file.name))
+    const routes = await getFilePaths(routesFolder);
 
     await Promise.allSettled(
       routes.map(async (routePath: string) => {
