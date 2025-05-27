@@ -2,7 +2,7 @@ import { readdir } from 'fs/promises';
 import path from 'path';
 
 /**
- * Recursively gets all TypeScript and JavaScript file paths from a directory.
+ * Recursively gets all file paths from a directory.
  * 
  * This function:
  * - Recursively traverses directories
